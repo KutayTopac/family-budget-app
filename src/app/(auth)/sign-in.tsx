@@ -18,7 +18,7 @@ export default function SignInScreen() {
     setLoading(true); setError(null);
     try {
       await authService.signIn({ email, password });
-      router.replace('/household');
+      router.replace('/dashboard');
     } catch (caught) {
       setError(getErrorMessage(caught));
     } finally { setLoading(false); }

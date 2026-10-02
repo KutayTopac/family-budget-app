@@ -2,7 +2,7 @@
 
 Eşlerin tek bir aile alanında gelir, gider, hesap, bütçe hedefi, varlık ve yatırım takibi yapabilmesi için geliştirilen açık kaynak mobil uygulama.
 
-> Durum: Adım 3 tamamlandı. Expo temeli, kimlik doğrulama, aile ve eş daveti yanında tip güvenli gelir/gider kayıt akışı hazırdır.
+> Durum: Adım 5 tamamlandı. Dashboard, aylık finansal özetler, grafik raporları ve bütçe ilerleme görünümü mobil ve web üzerinde hazırdır.
 
 ## Özellik vizyonu
 
@@ -26,6 +26,7 @@ Eşlerin tek bir aile alanında gelir, gider, hesap, bütçe hedefi, varlık ve 
 | Oturum saklama | Expo SQLite localStorage |
 | Güvenli istek UUID'si | Expo Crypto |
 | Doğrulama | Zod |
+| Grafikler | React Native Chart Kit ve React Native SVG |
 | Kod kalitesi | ESLint ve TypeScript |
 
 ## Mimari
@@ -58,6 +59,8 @@ Ayrıntı için [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) dosyasına bakın.
 - Davet kabulü satır kilidi kullanan atomik bir PostgreSQL fonksiyonudur; aynı kod iki kez kullanılamaz.
 - Bir kullanıcı aynı anda yalnızca bir aktif aile hesabına üye olabilir.
 - İşlemdeki `added_by` alanı istemci girdisinden değil doğrulanmış oturumdan alınır.
+- Varlık ve yatırım RPC'leri aktif household üyeliğini sunucuda yeniden doğrular.
+- Manuel yatırım fiyatı maliyetten ayrı saklanır; ileride fiyat API'si mevcut veri yapısını değiştirmeden bağlanabilir.
 - Her kayıt isteği UUID ile idempotenttir; aynı isteğin tekrar gönderilmesi ikinci işlem oluşturmaz.
 - Tutarlar JavaScript kayan noktalı sayısına çevrilmeden decimal string olarak taşınır.
 
@@ -73,7 +76,7 @@ Ayrıntı için [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) dosyasına bakın.
 ### Uygulamayı hazırlama
 
 ```bash
-git clone https://github.com/KULLANICI_ADI/family-budget-app.git
+git clone https://github.com/KutayTopac/family-budget-app.git
 cd family-budget-app
 npm install
 cp .env.example .env
@@ -108,7 +111,7 @@ Supabase Dashboard içindeki **Authentication > Providers > Email** bölümünde
 npm run start
 ```
 
-Ardından terminalde `i` ile iOS, `a` ile Android ya da QR kod ile fiziksel cihazı açın.
+Ardından terminalde `i` ile iOS, `a` ile Android, `w` ile web ya da QR kod ile fiziksel cihazı açın.
 
 ## Kalite kontrolleri
 
@@ -150,10 +153,13 @@ Görseller hazır olduğunda `screenshots/` klasörüne eklenebilir.
 - [x] Güvenli ortam değişkeni örneği
 - [x] Auth ve aile oluşturma
 - [x] Eş davet kodu ve atomik kabul akışı
-- [x] Gelir ve gider ekleme
-- [ ] Bütçe ve hedefler
-- [ ] Varlık ve yatırım takibi
-- [ ] Raporlama ve grafikler
+- [x] Gelir ve gider ekleme, listeleme, düzenleme ve silme
+- [x] Likit varlık ekleme, listeleme ve güncelleme
+- [x] Yatırım maliyeti, manuel güncel fiyat ve kâr/zarar takibi
+- [x] Net varlık ve aylık nakit akışı dashboard'u
+- [x] Kategori, kişi ve aylık trend grafikleri
+- [x] Kategori bazlı bütçe ilerleme görünümü
+- [ ] Bütçe/hedef oluşturma ve düzenleme ekranları
 
 ## Katkıda bulunma
 

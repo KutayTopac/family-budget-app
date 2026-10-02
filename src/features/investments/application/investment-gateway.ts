@@ -1,0 +1,3 @@
+import type { InvestmentClass, InvestmentDraft, InvestmentPriceUpdate } from '@/features/investments/domain/investment';
+export type InvestmentItem = { id: string; householdId: string; assetClass: InvestmentClass; symbol: string; name: string; quantity: string; unitCost: string; currentPrice: string; currency: string; tradedAt: string };
+export interface InvestmentGateway { list(householdId: string): Promise<InvestmentItem[]>; getById(householdId: string, id: string): Promise<InvestmentItem>; create(draft: InvestmentDraft): Promise<string>; updatePrice(draft: InvestmentPriceUpdate): Promise<string> }

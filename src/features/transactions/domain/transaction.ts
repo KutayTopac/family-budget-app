@@ -15,5 +15,15 @@ export const transactionDraftSchema = z.object({
   requestId: z.uuid(),
 });
 
+export const transactionUpdateSchema = transactionDraftSchema.omit({ requestId: true }).extend({
+  id: z.uuid(),
+});
+
+export const transactionQuerySchema = z.object({
+  householdId: z.uuid(),
+  limit: z.number().int().min(1).max(100).default(25),
+});
+
 export type TransactionDraft = z.infer<typeof transactionDraftSchema>;
+export type TransactionUpdate = z.infer<typeof transactionUpdateSchema>;
 export type TransactionType = TransactionDraft['type'];

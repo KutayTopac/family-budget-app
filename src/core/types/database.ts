@@ -13,7 +13,7 @@ export type HouseholdMember = {
 export type Account = Timestamps & {
   id: string; household_id: string; name: string;
   type: 'cash' | 'checking' | 'savings' | 'credit' | 'investment' | 'debt';
-  currency: string; opening_balance: string; owner_member_id: string | null; is_archived: boolean;
+  currency: string; opening_balance: string; current_balance: string; owner_member_id: string | null; is_archived: boolean;
 };
 export type Category = Timestamps & {
   id: string; household_id: string; name: string; type: 'income' | 'expense';
@@ -25,6 +25,9 @@ export type Transaction = Timestamps & {
   occurred_at: string; added_by: string; spent_by: string | null; status: 'posted' | 'voided';
   client_request_id: string; version: number;
 };
+export type Instrument = { id: string; symbol: string; exchange: string; name: string; asset_class: 'fx' | 'gold' | 'stock' | 'fund' | 'crypto'; currency: string; isin: string | null; created_at: string };
+export type InvestmentTrade = { id: string; household_id: string; account_id: string; instrument_id: string; type: 'buy' | 'sell' | 'dividend' | 'coupon' | 'split'; quantity: string; unit_price: string; current_unit_price: string; fees: string; currency: string; traded_at: string; added_by: string; created_at: string; updated_at: string };
+export type Budget = Timestamps & { id: string; household_id: string; category_id: string; month: string; limit_amount: string; currency: string };
 
 export type Database = {
   public: {
@@ -39,7 +42,7 @@ export type Database = {
         { household_id: string; user_id: string; role?: 'owner' | 'member'; status?: 'active' | 'left' },
         { role?: 'owner' | 'member'; status?: 'active' | 'left' }>;
       accounts: Table<Account,
-        { id?: string; household_id: string; name: string; type: Account['type']; currency?: string; opening_balance?: string; owner_member_id?: string | null; is_archived?: boolean },
+        { id?: string; household_id: string; name: string; type: Account['type']; currency?: string; opening_balance?: string; current_balance?: string; owner_member_id?: string | null; is_archived?: boolean },
         Partial<Omit<Account, 'id' | 'household_id' | 'created_at'>>>;
       categories: Table<Category,
         { id?: string; household_id: string; name: string; type: Category['type']; parent_id?: string | null; icon?: string | null; color?: string | null; is_active?: boolean },
@@ -47,6 +50,15 @@ export type Database = {
       transactions: Table<Transaction,
         { id?: string; household_id: string; account_id: string; type: Transaction['type']; amount: string; currency?: string; category_id?: string | null; description?: string | null; occurred_at: string; added_by: string; spent_by?: string | null; status?: Transaction['status']; client_request_id: string; version?: number },
         Partial<Omit<Transaction, 'id' | 'household_id' | 'added_by' | 'created_at'>>>;
+      instruments: Table<Instrument,
+        { id?: string; symbol: string; exchange?: string; name: string; asset_class: Instrument['asset_class']; currency: string; isin?: string | null },
+        Partial<Omit<Instrument, 'id' | 'created_at'>>>;
+      investment_trades: Table<InvestmentTrade,
+        { id?: string; household_id: string; account_id: string; instrument_id: string; type: InvestmentTrade['type']; quantity: string; unit_price: string; current_unit_price: string; fees?: string; currency: string; traded_at: string; added_by: string },
+        Partial<Omit<InvestmentTrade, 'id' | 'household_id' | 'added_by' | 'created_at'>>>;
+      budgets: Table<Budget,
+        { id?: string; household_id: string; category_id: string; month: string; limit_amount: string; currency?: string },
+        Partial<Omit<Budget, 'id' | 'household_id' | 'created_at'>>>;
     };
     Views: Record<string, never>;
     Functions: {
@@ -77,6 +89,29 @@ export type Database = {
         };
         Returns: string;
       };
+      update_financial_transaction: {
+        Args: {
+          target_transaction_id: string;
+          target_household_id: string;
+          target_account_id: string;
+          transaction_type: 'income' | 'expense';
+          transaction_amount: string;
+          transaction_currency: string;
+          target_category_id: string;
+          transaction_description: string;
+          transaction_occurred_at: string;
+          transaction_spent_by: string | null;
+        };
+        Returns: string;
+      };
+      delete_financial_transaction: {
+        Args: { target_transaction_id: string; target_household_id: string };
+        Returns: string;
+      };
+      create_asset: { Args: { target_household_id: string; asset_name: string; asset_type: string; asset_balance: string; asset_currency: string }; Returns: string };
+      update_asset: { Args: { target_asset_id: string; target_household_id: string; asset_name: string; asset_type: string; asset_balance: string; asset_currency: string }; Returns: string };
+      create_investment: { Args: { target_household_id: string; investment_asset_class: string; investment_symbol: string; investment_name: string; investment_quantity: string; investment_unit_cost: string; investment_current_price: string; investment_currency: string; investment_traded_at: string }; Returns: string };
+      update_investment_price: { Args: { target_trade_id: string; target_household_id: string; investment_current_price: string }; Returns: string };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

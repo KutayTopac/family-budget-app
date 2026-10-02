@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/auth-store';
 
 export default function HomeScreen() {
   const { session, isReady } = useAuthStore();
-  if (isReady) return <Redirect href={session ? '/household' : '/sign-in'} />;
+  if (isReady) return <Redirect href={session ? '/dashboard' : '/sign-in'} />;
   return (
     <SafeAreaView style={styles.safeArea}>
       <ActivityIndicator color={colors.accent} size="large" />

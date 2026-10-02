@@ -28,9 +28,9 @@ export function PrimaryButton({ label, loading = false, variant = 'primary', dis
 }
 
 const styles = StyleSheet.create({
-  button: { minHeight: 50, borderRadius: 14, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18 },
+  button: { minHeight: 52, borderRadius: 16, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, shadowColor: colors.text, shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
   secondary: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   dimmed: { opacity: 0.6 },
-  label: { color: colors.surface, fontSize: 16, fontWeight: '800' },
+  label: { color: colors.surface, fontSize: 16, fontWeight: '900', letterSpacing: 0.2 },
   secondaryLabel: { color: colors.accent },
 });

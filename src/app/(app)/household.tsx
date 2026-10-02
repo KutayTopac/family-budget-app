@@ -5,6 +5,10 @@ import { ActivityIndicator, SafeAreaView, ScrollView, Share, StyleSheet, Text, V
 import type { HouseholdSummary, Invitation } from '@/features/households/application/household-gateway';
 import { createHouseholdService } from '@/features/households/application/household-service';
 import { supabaseHouseholdGateway } from '@/features/households/infrastructure/supabase-household-gateway';
+import type { TransactionListItem } from '@/features/transactions/application/transaction-gateway';
+import { createTransactionService } from '@/features/transactions/application/transaction-service';
+import { supabaseTransactionGateway } from '@/features/transactions/infrastructure/supabase-transaction-gateway';
+import { TransactionList } from '@/features/transactions/presentation/TransactionList';
 import { FormField } from '@/shared/components/FormField';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { getErrorMessage } from '@/shared/lib/errors';
@@ -13,6 +17,7 @@ import { useAppStore } from '@/store/app-store';
 import { authService, useAuthStore } from '@/store/auth-store';
 
 const householdService = createHouseholdService(supabaseHouseholdGateway);
+const transactionService = createTransactionService(supabaseTransactionGateway);
 
 export default function HouseholdScreen() {
   const session = useAuthStore((state) => state.session);
@@ -22,6 +27,9 @@ export default function HouseholdScreen() {
   const [code, setCode] = useState('');
   const [invitation, setInvitation] = useState<Invitation | null>(null);
   const [loading, setLoading] = useState(true);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [transactions, setTransactions] = useState<TransactionListItem[]>([]);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [action, setAction] = useState<'create' | 'accept' | 'invite' | 'signout' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,8 +41,12 @@ export default function HouseholdScreen() {
       const result = await householdService.findMine(userId);
       setHousehold(result);
       setActiveHouseholdId(result?.id ?? null);
+      if (result) {
+        setTransactionsLoading(true);
+        setTransactions(await transactionService.list(result.id, 20));
+      } else setTransactions([]);
     } catch (caught) { setError(getErrorMessage(caught)); }
-    finally { setLoading(false); }
+    finally { setLoading(false); setTransactionsLoading(false); }
   }, [setActiveHouseholdId, userId]);
 
   useEffect(() => {
@@ -77,6 +89,16 @@ export default function HouseholdScreen() {
     await Share.share({ message: `Aile Bütçesi aile hesabımıza katılmak için davet kodu: ${invitation.code}` });
   }
 
+  async function deleteTransaction(transaction: TransactionListItem) {
+    if (!household) return;
+    setDeletingId(transaction.id); setError(null);
+    try {
+      await transactionService.remove(household.id, transaction.id);
+      setTransactions((current) => current.filter((item) => item.id !== transaction.id));
+    } catch (caught) { setError(getErrorMessage(caught)); }
+    finally { setDeletingId(null); }
+  }
+
   async function signOut() {
     await run('signout', async () => { await authService.signOut(); router.replace('/sign-in'); });
   }
@@ -100,6 +122,21 @@ export default function HouseholdScreen() {
               <Text style={styles.meta}>{household.baseCurrency} · {household.role === 'owner' ? 'Yönetici' : 'Üye'}</Text>
             </View>
             <PrimaryButton label="Gelir veya gider ekle" onPress={() => router.push('/transaction/new')} />
+            <PrimaryButton label="Dashboard'a dön" variant="secondary" onPress={() => router.replace('/dashboard')} />
+            <PrimaryButton label="Varlıklar ve yatırımlar" variant="secondary" onPress={() => router.push('/assets')} />
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Son işlemler</Text>
+                <Text style={styles.help}>En yeni 20 kayıt</Text>
+              </View>
+              <TransactionList
+                items={transactions}
+                loading={transactionsLoading}
+                deletingId={deletingId}
+                onEdit={(transaction) => router.push({ pathname: '/transaction/[id]', params: { id: transaction.id } })}
+                onDelete={(transaction) => void deleteTransaction(transaction)}
+              />
+            </View>
             {household.role === 'owner' && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Eşinizi davet edin</Text>
@@ -144,7 +181,7 @@ const styles = StyleSheet.create({
   error: { color: colors.danger, backgroundColor: '#FDECEC', borderRadius: 12, padding: 12, lineHeight: 20 },
   card: { backgroundColor: colors.accent, borderRadius: 22, padding: 22, gap: 7 }, cardLabel: { color: '#DCECF4', fontWeight: '800', fontSize: 11, letterSpacing: 1.1 },
   cardTitle: { color: colors.surface, fontSize: 28, fontWeight: '800' }, meta: { color: colors.textMuted, fontSize: 13 },
-  section: { backgroundColor: colors.surface, borderRadius: 20, padding: 19, gap: 14, borderWidth: 1, borderColor: colors.border }, sectionTitle: { color: colors.text, fontSize: 20, fontWeight: '800' },
+  section: { backgroundColor: colors.surface, borderRadius: 20, padding: 19, gap: 14, borderWidth: 1, borderColor: colors.border }, sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }, sectionTitle: { color: colors.text, fontSize: 20, fontWeight: '800' },
   help: { color: colors.textMuted, lineHeight: 21 }, invitation: { backgroundColor: colors.background, borderRadius: 16, padding: 16, gap: 11 }, invitationCode: { color: colors.text, fontSize: 23, fontWeight: '800', letterSpacing: 1.2, textAlign: 'center' },
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 12 }, line: { height: 1, backgroundColor: colors.border, flex: 1 }, or: { color: colors.textMuted, fontSize: 11, fontWeight: '800' },
 });

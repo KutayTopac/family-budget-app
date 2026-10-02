@@ -1,0 +1,1 @@
+import{z}from'zod';import type{DashboardGateway}from'@/features/dashboard/application/dashboard-gateway';const uuid=z.uuid();export const createDashboardService=(gateway:DashboardGateway)=>({getDashboard:(id:string)=>gateway.getDashboard(uuid.parse(id)),getAnalytics:(id:string)=>gateway.getAnalytics(uuid.parse(id))});
